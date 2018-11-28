@@ -1,0 +1,5 @@
+//Haufment encoding
+
+//Want the words u use frequently to have smaller binary representations. 
+// Cost is number of occurencesx depth. High numbers at the top. 
+//
