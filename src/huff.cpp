@@ -37,7 +37,7 @@ void printCodes(struct huffmannode *root, std::string str)
     if (!root)
         return;
     if (root->c != '#')
-        std::cout << root->c << ": " << str;
+        std::cout << root->c << ": " << str << std::endl;
     printCodes(root->left, str + "0");
     printCodes(root->right, str + "1");
 }
