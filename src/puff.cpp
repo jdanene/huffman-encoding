@@ -5,50 +5,62 @@
 #include <iostream>
 #include <sstream>
 
-#define DEFAULT_INFILE  "test-files/hamlet-ascii.txt.huff"
+#define DEFAULT_INFILE "test-files/hamlet-ascii.txt.huff"
 #define DEFAULT_OUTFILE "test-files/hamlet-ascii.txt.out"
+struct huffmannode;
+using node_ptr = std::shared_ptr<huffmannode>;
+using struct_node_ptr = std::shared_ptr<struct huffmannode>;
+
 using namespace ipd;
-std::map<char,std::string> bitcode;
-std::map<char,size_t> freq;
-struct huffmannode{
+std::map<char, std::string> bitcode;
+std::map<char, size_t> freq;
+struct huffmannode
+{
     char c;
     size_t freq;
-    huffmannode *left,*right;
+    node_ptr left, right;
 
-    huffmannode(char c, size_t freq){
-        left=right=NULL;
-        this->c =c;
+    huffmannode(char c, size_t freq)
+    {
+        left = right = nullptr;
+        this->c = c;
         this->freq = freq;
     }
 };
-struct compare{
-    bool operator()(huffmannode* left, huffmannode* right)
+struct compare
+{
+    bool operator()(node_ptr left, node_ptr right)
     {
         return (left->freq > right->freq);
     }
 };
-std::priority_queue<huffmannode*, std::vector<huffmannode*>, compare> q;
-void storecodes(struct huffmannode* root, std::string str){
-    if(root==NULL){
+std::priority_queue<node_ptr, std::vector<node_ptr>, compare> q;
+void storecodes(struct_node_ptr root, std::string str)
+{
+    if (root == nullptr)
+    {
         return;
     }
-    if(root->c != '#')
-        bitcode[root->c]=str;
-    storecodes(root->left, str+"0");
-    storecodes(root->right, str+"1");
+    if (root->c != '#')
+        bitcode[root->c] = str;
+    storecodes(root->left, str + "0");
+    storecodes(root->right, str + "1");
 }
 
-void createHuffmantree(){
-    struct huffmannode *left, *right, *top;
-    for(auto v = freq.begin(); v!=freq.end(); v++){
-        q.push(new huffmannode(v->first, v->second));
+void createHuffmantree()
+{
+    struct_node_ptr left, right, top;
+    for (auto v = freq.begin(); v != freq.end(); v++)
+    {
+        q.push(std::make_shared<huffmannode>(v->first, v->second));
     }
-    while(q.size()!=1){
+    while (q.size() != 1)
+    {
         left = q.top();
         q.pop();
         right = q.top();
         q.pop();
-        top = new huffmannode('#', left->freq + right->freq);
+        top = std::make_shared<huffmannode>('#', left->freq + right->freq);
         top->left = left;
         top->right = right;
         q.push(top);
@@ -56,21 +68,27 @@ void createHuffmantree(){
     storecodes(q.top(), "");
 }
 
-void getFreq(bifstream& in){
+void getFreq(bifstream &in)
+{
     char c;
     std::string str;
-    while (in.read_bits(c, 8)) {
-        if(c =='#') break;
+    while (in.read_bits(c, 8))
+    {
+        if (c == '#')
+            break;
         str += c;
     }
 
-    for(int i =0; i<str.size();i++){
+    for (int i = 0; i < str.size(); i++)
+    {
 
-        if(i>0 && str.at(i) == ':' && str.at(i+1) != ':'){
-            char ch = str.at(i-1);
-            std::string tmp ;
-            while(str.at(i+1)!= ';'){
-                tmp +=str.at(i+1);
+        if (i > 0 && str.at(i) == ':' && str.at(i + 1) != ':')
+        {
+            char ch = str.at(i - 1);
+            std::string tmp;
+            while (str.at(i + 1) != ';')
+            {
+                tmp += str.at(i + 1);
                 i++;
             }
             std::stringstream tmps(tmp);
@@ -79,33 +97,36 @@ void getFreq(bifstream& in){
             freq[ch] = fre;
         }
     }
-
 }
 
-void decode(struct huffmannode* root,bifstream& in, std::ostream& out){
+void decode(struct_node_ptr root, bifstream &in, std::ostream &out)
+{
     char c;
-    struct huffmannode* curr = root;
-    while (in.read_bits(c, 8)) {
+    struct_node_ptr curr = root;
+    while (in.read_bits(c, 8))
+    {
 
-        if(c == '0'){
+        if (c == '0')
+        {
             curr = curr->left;
-        }else{
+        }
+        else
+        {
             curr = curr->right;
         }
-        if(curr->left==NULL && curr->right == NULL){
-            out<< curr->c;
+        if (curr->left == nullptr && curr->right == nullptr)
+        {
+            out << curr->c;
             curr = root;
         }
     }
-
 }
-int main(int argc, const char* argv[])
+int main(int argc, const char *argv[])
 {
     const char *infile, *outfile;
 
     get_file_names(argc, argv, infile, outfile,
                    DEFAULT_INFILE, DEFAULT_OUTFILE);
-
 
     bifstream in(infile);
     assert_good(in, argv);
@@ -116,6 +137,6 @@ int main(int argc, const char* argv[])
     getFreq(in);
 
     createHuffmantree();
-    decode(q.top(),in, out);
+    decode(q.top(), in, out);
     return 0;
 }

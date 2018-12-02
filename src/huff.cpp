@@ -10,6 +10,10 @@
 #define DEFAULT_INFILE "test-files/hamlet-ascii.txt.huff"
 #define DEFAULT_OUTFILE "test-files/hamlet-ascii.txt.puff"
 
+struct huffmannode;
+using node_ptr = std::shared_ptr<huffmannode>;
+using struct_node_ptr = std::shared_ptr<struct huffmannode>;
+
 using namespace ipd;
 std::map<char, std::string> bitcode;
 std::map<char, size_t> freq;
@@ -17,26 +21,26 @@ struct huffmannode
 {
     char c;
     size_t freq;
-    huffmannode *left, *right;
+    node_ptr left, right;
 
     huffmannode(char c, size_t freq)
     {
-        left = right = NULL;
+        left = right = nullptr;
         this->c = c;
         this->freq = freq;
     }
 };
 struct compare
 {
-    bool operator()(huffmannode *left, huffmannode *right)
+    bool operator()(node_ptr left, node_ptr right)
     {
         return (left->freq > right->freq);
     }
 };
 
-void storecodes(struct huffmannode *root, std::string str)
+void storecodes(struct_node_ptr root, std::string str)
 {
-    if (root == NULL)
+    if (root == nullptr)
     {
         return;
     }
@@ -47,12 +51,13 @@ void storecodes(struct huffmannode *root, std::string str)
 }
 void createHuffmantree()
 {
-    struct huffmannode *left, *right, *top;
-    std::priority_queue<huffmannode *, std::vector<huffmannode *>, compare> q;
+    struct_node_ptr left, right, top;
+    std::priority_queue<node_ptr, std::vector<node_ptr>, compare> q;
 
     for (auto v = freq.begin(); v != freq.end(); v++)
     {
-        q.push(new huffmannode(v->first, v->second));
+        node_ptr newone = std::make_shared<huffmannode>(v->first, v->second);
+        q.push(newone);
     }
     while (q.size() != 1)
     {
@@ -60,7 +65,7 @@ void createHuffmantree()
         q.pop();
         right = q.top();
         q.pop();
-        top = new huffmannode('#', left->freq + right->freq);
+        top = std::make_shared<huffmannode>('#', left->freq + right->freq);
         top->left = left;
         top->right = right;
         q.push(top);
