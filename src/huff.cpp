@@ -12,14 +12,14 @@
 
 using namespace ipd;
 std::map<char, std::string> bitcode;
-std::map<char, int> freq;
+std::map<char, size_t> freq;
 struct huffmannode
 {
     char c;
-    int freq;
+    size_t freq;
     huffmannode *left, *right;
 
-    huffmannode(char c, int freq)
+    huffmannode(char c, size_t freq)
     {
         left = right = NULL;
         this->c = c;
@@ -94,10 +94,14 @@ void writefreqtabletofile(bostream &out)
     for (auto v = freq.begin(); v != freq.end(); v++)
     {
         char ch = v->first;
-        char fq = '0' + v->second;
+        std::string f = std::to_string(v->second);
+
         out.write_bits(ch, 8);
         out.write_bits(':', 8);
-        out.write_bits(fq, 8);
+        for (int i = 0; i < f.size(); i++)
+        {
+            out.write_bits(f.at(i), 8);
+        }
         out.write_bits(';', 8);
     }
     out.write_bits('#', 8);
