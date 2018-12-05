@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "*.wpy": "vue",
+    "string": "cpp"
+  }
+}
